@@ -4,29 +4,26 @@
  * An admin opens Admin > User Management, adds a new Admin user with all required fields,
  * and finds exactly that user by searching for its username.
  *
- * Seeding: one employee per test via the API (employee fixture) — a system user must be
- *          linked to an existing employee, and the shared demo's own employees change constantly.
- * Cleanup: the created user (usersToCleanUp) and the employee (employee fixture teardown),
- *          both after the test, failures logged and never thrown.
+ * Seeding: one employee via the API — a system user must be linked to an existing employee.
+ * Cleanup: the created user and the employee, after the test (cleanup fixture).
  */
-import { test, expect } from '../../../fixtures';
+import { test, expect } from '../../../fixtures/admin.fixture';
 import { buildAdminUser } from '../../../test-data/users';
 
-test.describe('Admin — Add user › Happy path', () => {
-  // UI flow + API setup/cleanup against a shared public demo is slow: triple the default timeout.
-  test.slow();
-
+test.describe('Admin — Add user › Happy path', { tag: '@smoke' }, () => {
   test('Create admin with required fields — admin found by username search', async ({
     page,
-    employee,
-    usersToCleanUp,
+    seed,
+    api,
+    cleanup,
     dashboardPage,
     sideMenu,
     systemUsersPage,
     addUserPage,
   }) => {
+    const employee = await seed.employee();
     const admin = buildAdminUser(employee.fullName);
-    usersToCleanUp.push(admin.username);
+    cleanup.add(`user ${admin.username}`, () => api.deleteUsersByUsername(admin.username));
 
     await test.step('Open the Admin section', async () => {
       await dashboardPage.goto();
@@ -46,7 +43,7 @@ test.describe('Admin — Add user › Happy path', () => {
     });
 
     await test.step('Verify the admin was saved', async () => {
-      await expect.soft(addUserPage.successToast).toBeVisible();
+      await expect.soft(addUserPage.toast.saved).toBeVisible();
       // Gate: the app returns to the users list only after a successful save.
       await expect(page).toHaveURL(/\/admin\/viewSystemUsers/);
     });
@@ -56,14 +53,15 @@ test.describe('Admin — Add user › Happy path', () => {
     });
 
     await test.step('Verify the admin is found in the list', async () => {
+      const { table } = systemUsersPage;
       // The whole result set must be exactly this user: proves the search applied the term.
-      await expect.soft(systemUsersPage.resultRows).toHaveCount(1);
-      const row = systemUsersPage.rowFor(admin.username);
+      await expect.soft(table.rows).toHaveCount(1);
+      const row = table.rowWith(admin.username);
       // Gate: the row must exist before its cells are read.
       await expect(row).toHaveCount(1);
-      await expect.soft(systemUsersPage.cell(row, 'User Role')).toHaveText(admin.role);
-      await expect.soft(systemUsersPage.cell(row, 'Employee Name')).toHaveText(employee.fullName);
-      await expect.soft(systemUsersPage.cell(row, 'Status')).toHaveText(admin.status);
+      await expect.soft(await table.cell(row, 'User Role')).toHaveText(admin.role);
+      await expect.soft(await table.cell(row, 'Employee Name')).toHaveText(employee.fullName);
+      await expect.soft(await table.cell(row, 'Status')).toHaveText(admin.status);
     });
   });
 });

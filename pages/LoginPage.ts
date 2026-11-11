@@ -1,7 +1,10 @@
 import { type Locator, type Page } from '@playwright/test';
+import { BasePage } from './BasePage';
 
 /** Login screen — /web/index.php/auth/login. */
-export class LoginPage {
+export class LoginPage extends BasePage {
+  readonly path = '/web/index.php/auth/login';
+
   // ─── Form fields ───
   readonly heading: Locator;
   readonly usernameInput: Locator;
@@ -14,7 +17,8 @@ export class LoginPage {
   readonly usernameRequiredError: Locator;
   readonly passwordRequiredError: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page);
     this.heading = page.getByRole('heading', { name: 'Login' });
     this.usernameInput = page.getByPlaceholder('Username');
     this.passwordInput = page.getByPlaceholder('Password');
@@ -30,10 +34,6 @@ export class LoginPage {
       .locator('.oxd-input-group')
       .filter({ has: this.passwordInput })
       .getByText('Required', { exact: true });
-  }
-
-  async goto(): Promise<void> {
-    await this.page.goto('/web/index.php/auth/login');
   }
 
   async login(username: string, password: string): Promise<void> {

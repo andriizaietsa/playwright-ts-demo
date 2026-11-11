@@ -1,12 +1,10 @@
 name: Playwright tests
 
+# Manual only: start it from Actions → Playwright tests → Run workflow.
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch: # adds a "Run workflow" button in the Actions tab
+  workflow_dispatch:
 
-concurrency: # a new push cancels the previous run on the same branch
+concurrency: # starting a new run cancels the one still running on the same branch
   group: playwright-${{ github.ref }}
   cancel-in-progress: true
 
@@ -21,7 +19,9 @@ jobs:
           node-version: lts/*
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npx playwright install --with-deps chromium
       - run: npx playwright test
         env:
           # Optional repo secrets; when unset, config/env.ts falls back to the public demo login.

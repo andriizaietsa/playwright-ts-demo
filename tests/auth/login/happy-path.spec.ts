@@ -10,7 +10,7 @@
 import { test, expect } from '../../../fixtures/auth.fixture';
 import { env } from '../../../config/env';
 
-test.describe('Auth — Login › Happy path', () => {
+test.describe('Auth — Login › Happy path', { tag: '@smoke' }, () => {
   test('Log in with valid credentials — dashboard opens', async ({ page, loginPage, dashboardPage }) => {
     await test.step('Open the login page', async () => {
       await loginPage.goto();

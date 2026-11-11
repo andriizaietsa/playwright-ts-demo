@@ -9,7 +9,7 @@
 import { test, expect } from '../../../fixtures/auth.fixture';
 import { env } from '../../../config/env';
 
-test.describe('Auth — Login › Validation', () => {
+test.describe('Auth — Login › Validation', { tag: '@smoke' }, () => {
   test.beforeEach(async ({ loginPage }) => {
     await loginPage.goto();
   });

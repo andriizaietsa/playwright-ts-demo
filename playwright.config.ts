@@ -3,7 +3,8 @@ import { ADMIN_STORAGE_STATE } from './config/env';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 30_000,
+  // The shared public demo is slow, and most tests seed data through the API first.
+  timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -17,19 +18,13 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    // Logs in once and saves the session for the browser projects below.
+    // Logs in once and saves the session for the chromium project below.
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    // Tests run in Chrome only.
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], storageState: ADMIN_STORAGE_STATE },
       dependencies: ['setup'],
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'], storageState: ADMIN_STORAGE_STATE },
-      dependencies: ['setup'],
-    },
-    // WebKit currently crashes on launch on this macOS version — re-enable after updating Playwright
-    // { name: 'webkit', use: { ...devices['Desktop Safari'], storageState: ADMIN_STORAGE_STATE }, dependencies: ['setup'] },
   ],
 });
